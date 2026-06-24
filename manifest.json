@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Telegram Camera",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Ambil foto langsung dari Telegram Web, menyatu dengan menu attachment + preview sebelum kirim",
   "icons": {
     "16": "icons/icon16.png",
@@ -17,14 +17,14 @@
       "matches": [
         "https://web.telegram.org/*"
       ],
-      "js": ["content.js"],
+      "js": ["camera.js", "content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["camera.html", "camera-page.js", "camera-page.css", "icons/*.png"],
+      "resources": ["icons/*.png"],
       "matches": ["https://web.telegram.org/*"]
     }
   ]
