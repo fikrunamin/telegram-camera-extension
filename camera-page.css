@@ -1,5 +1,9 @@
 * { box-sizing: border-box; }
 
+/* Pastikan atribut [hidden] benar-benar menyembunyikan elemen, walau ada
+   aturan display lain (mis. #status { display: flex }). */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   height: 100%;

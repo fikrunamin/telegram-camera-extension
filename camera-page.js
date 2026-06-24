@@ -98,13 +98,14 @@ retakeBtn.addEventListener("click", () => {
 
 useBtn.addEventListener("click", () => {
   if (!capturedDataUrl) return;
-  if (window.opener) {
-    window.opener.postMessage({ type: "TG_CAMERA_PHOTO", dataUrl: capturedDataUrl }, "*");
-  } else {
-    setStatus("Tidak menemukan tab Telegram pembuka.");
-    return;
-  }
-  window.close();
+  // Kirim lewat chrome.storage (andal lintas-konteks; tidak bergantung opener).
+  chrome.storage.local.set(
+    { tgCameraPhoto: { dataUrl: capturedDataUrl, ts: Date.now() } },
+    () => {
+      stopCamera();
+      window.close();
+    },
+  );
 });
 
 window.addEventListener("beforeunload", stopCamera);

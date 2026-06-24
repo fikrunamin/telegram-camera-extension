@@ -6,7 +6,6 @@
 
 const CAMERA_ICON = chrome.runtime.getURL("icons/icon38.png");
 const CAMERA_PAGE = chrome.runtime.getURL("camera.html");
-const EXT_ORIGIN = new URL(CAMERA_ICON).origin; // chrome-extension://<id>
 
 // Substring class ikon (tgico-*) khas item menu attachment webk.
 const ATTACH_ICON_HINTS = ["image", "document", "poll", "media", "photo"];
@@ -89,11 +88,12 @@ function openCameraPopup() {
 
 /* ---------- 3. Terima foto dari popup, paste ke Telegram ---------- */
 
-window.addEventListener("message", (e) => {
-  if (e.origin !== EXT_ORIGIN) return;
-  if (!e.data || e.data.type !== "TG_CAMERA_PHOTO") return;
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !changes.tgCameraPhoto || !changes.tgCameraPhoto.newValue) return;
 
-  pasteDataUrlToTelegram(e.data.dataUrl);
+  const dataUrl = changes.tgCameraPhoto.newValue.dataUrl;
+  chrome.storage.local.remove("tgCameraPhoto"); // bersihkan agar tidak terkirim ulang
+  pasteDataUrlToTelegram(dataUrl);
 });
 
 function pasteDataUrlToTelegram(dataUrl) {
