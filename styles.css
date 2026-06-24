@@ -1,0 +1,12 @@
+/* Item "Camera" di dalam menu attachment Telegram */
+.tg-camera-menu-item {
+  display: flex;
+  align-items: center;
+}
+
+.tg-camera-menu-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+}
