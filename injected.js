@@ -15,8 +15,11 @@
 
   function findMessageInput() {
     return (
+      // webk (/k/)
       document.querySelector(".input-message-input[contenteditable='true']") ||
       document.querySelector(".input-message-input") ||
+      // webz (/a/)
+      document.querySelector("#editable-message-text") ||
       document.querySelector('[contenteditable="true"]')
     );
   }
@@ -41,9 +44,13 @@
 
   function dispatchDrop(file) {
     const target =
+      // webk (/k/)
       document.querySelector(".chat-input") ||
       document.querySelector(".bubbles") ||
       document.querySelector(".chat") ||
+      // webz (/a/)
+      document.querySelector("#MiddleColumn") ||
+      document.querySelector(".messages-layout") ||
       findMessageInput() ||
       document.body;
 

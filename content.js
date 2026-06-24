@@ -1,4 +1,4 @@
-// Berjalan di halaman Telegram Web (/k/). Tugasnya:
+// Berjalan di halaman Telegram Web (/k/ webk maupun /a/ webz). Tugasnya:
 //  1. Menyisipkan item "Camera" ke menu attachment.
 //  2. Membuka halaman kamera milik extension (camera.html) di jendela popup.
 //  3. Menerima foto dari popup lalu mem-paste-nya ke Telegram (muncul dialog
@@ -7,34 +7,28 @@
 const CAMERA_ICON = chrome.runtime.getURL("icons/icon38.png");
 const CAMERA_PAGE = chrome.runtime.getURL("camera.html");
 
-// Substring class ikon (tgico-*) khas item menu attachment webk.
+// Substring class ikon khas item menu attachment (webk: tgico-*, webz: icon-*).
 const ATTACH_ICON_HINTS = ["image", "document", "poll", "media", "photo"];
+
+const IS_WEBZ = location.pathname.startsWith("/a/");
 
 /* ---------- 1. Sisipkan item Camera ke menu attachment ---------- */
 
-function looksLikeAttachMenu(menu) {
-  const items = menu.querySelectorAll(".btn-menu-item");
-  if (items.length < 1) return false;
-
-  for (const item of items) {
-    if (item.id === "tg-camera-item") continue;
-    const cls = item.className + " " + item.innerHTML;
-    if (ATTACH_ICON_HINTS.some((h) => cls.includes("tgico-" + h) || cls.includes(h))) {
-      return true;
-    }
-  }
-  return false;
+function scanForAttachMenu() {
+  if (IS_WEBZ) scanWebZ();
+  else scanWebK();
 }
 
-function scanForAttachMenu() {
+// --- webk (/k/) ---
+function scanWebK() {
   for (const menu of document.querySelectorAll(".btn-menu")) {
     if (menu.querySelector("#tg-camera-item")) continue;
-    if (!looksLikeAttachMenu(menu)) continue;
-    menu.appendChild(buildCameraItem());
+    if (!menuHasAttachIcon(menu, ".btn-menu-item")) continue;
+    menu.appendChild(buildCameraItemK());
   }
 }
 
-function buildCameraItem() {
+function buildCameraItemK() {
   const item = document.createElement("div");
   item.id = "tg-camera-item";
   item.className = "btn-menu-item rp tg-camera-menu-item";
@@ -44,14 +38,51 @@ function buildCameraItem() {
     </span>
     <span class="btn-menu-item-text">Camera</span>
   `;
-
-  item.addEventListener("click", (e) => {
-    e.stopPropagation();
-    document.body.click(); // tutup menu attachment (jangan pakai Escape!)
-    openCameraPopup();
-  });
-
+  item.addEventListener("click", onCameraItemClick);
   return item;
+}
+
+// --- webz (/a/) ---
+function scanWebZ() {
+  for (const menu of document.querySelectorAll(".Menu .bubble, .menu-container")) {
+    if (menu.querySelector("#tg-camera-item")) continue;
+    if (!menuHasAttachIcon(menu, ".MenuItem")) continue;
+    menu.appendChild(buildCameraItemZ());
+  }
+}
+
+function buildCameraItemZ() {
+  const item = document.createElement("div");
+  item.id = "tg-camera-item";
+  item.className = "MenuItem compact tg-camera-menu-item-z";
+  item.setAttribute("role", "menuitem");
+  item.innerHTML = `
+    <img class="tg-camera-menu-icon-z" src="${CAMERA_ICON}" alt="">
+    <span>Camera</span>
+  `;
+  item.addEventListener("click", onCameraItemClick);
+  return item;
+}
+
+// --- bersama ---
+function menuHasAttachIcon(menu, itemSelector) {
+  const items = menu.querySelectorAll(itemSelector);
+  if (items.length < 1) return false;
+
+  for (const item of items) {
+    if (item.id === "tg-camera-item") continue;
+    const cls = item.className + " " + item.innerHTML;
+    if (ATTACH_ICON_HINTS.some((h) => cls.includes("tgico-" + h) || cls.includes("icon-" + h))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function onCameraItemClick(e) {
+  e.stopPropagation();
+  document.body.click(); // tutup menu attachment (jangan pakai Escape!)
+  openCameraPopup();
 }
 
 let scanQueued = false;

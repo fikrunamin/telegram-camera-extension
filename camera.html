@@ -9,6 +9,24 @@
 <body>
   <div id="stage">
     <video id="video" autoplay playsinline muted></video>
+
+    <div id="topbar">
+      <button id="timer" class="chip" type="button" title="Self-timer">⏱ Off</button>
+      <div class="topbar-right">
+        <select id="ratio" class="chip chip-select" title="Rasio">
+          <option value="full">Penuh</option>
+          <option value="1:1">1:1</option>
+          <option value="4:3">4:3</option>
+          <option value="3:4">3:4</option>
+          <option value="16:9">16:9</option>
+          <option value="9:16">9:16</option>
+        </select>
+        <button id="switch" class="chip" type="button" title="Ganti kamera" hidden>🔄 Kamera</button>
+      </div>
+    </div>
+
+    <div id="cropframe" hidden></div>
+    <div id="countdown" hidden></div>
     <div id="status">Memuat kamera…</div>
   </div>
 
