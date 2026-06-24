@@ -86,93 +86,25 @@ function openCameraPopup() {
   }
 }
 
-/* ---------- 3. Terima foto dari popup, paste ke Telegram ---------- */
+/* ---------- 3. Terima foto dari popup, teruskan ke main world ---------- */
+
+const LOG = (...a) => console.log("%c[TG-CAM]", "color:#3390ec;font-weight:bold", ...a);
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local" || !changes.tgCameraPhoto || !changes.tgCameraPhoto.newValue) return;
 
   const dataUrl = changes.tgCameraPhoto.newValue.dataUrl;
   chrome.storage.local.remove("tgCameraPhoto"); // bersihkan agar tidak terkirim ulang
-  pasteDataUrlToTelegram(dataUrl);
+  sendPhotoToTelegram(dataUrl);
 });
 
-const LOG = (...a) => console.log("%c[TG-CAM]", "color:#3390ec;font-weight:bold", ...a);
-
-function pasteDataUrlToTelegram(dataUrl) {
-  const blob = dataUrlToBlob(dataUrl);
-  const file = new File([blob], `photo_${stamp()}.jpg`, { type: "image/jpeg" });
-
+// Telegram membaca clipboardData/dataTransfer di MAIN world. Karena content
+// script di isolated world, kita kirim foto ke injected.js (MAIN world) yang
+// akan men-dispatch event paste-nya di konteks yang sama dengan Telegram.
+function sendPhotoToTelegram(dataUrl) {
   window.focus();
-
-  // Metode 1: jika kebetulan ada <input type=file> media -> suntik langsung.
-  const fileInput = findMediaFileInput();
-  if (fileInput) {
-    LOG("inject ke file input | accept:", fileInput.accept || "(kosong)");
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    fileInput.files = dt.files;
-    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
-    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
-    return;
-  }
-
-  // Metode 2 (utama): simulasi drag-and-drop ke area chat.
-  LOG("simulasi drop ke area chat");
-  simulateDrop(file);
-
-  // Metode 3 (cadangan terakhir): paste sintetis ke kolom pesan.
-  const input = findMessageInput();
-  if (input) {
-    input.focus();
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    const pasteEvent = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
-    Object.defineProperty(pasteEvent, "clipboardData", { value: dt });
-    input.dispatchEvent(pasteEvent);
-  }
-}
-
-function simulateDrop(file) {
-  const dt = new DataTransfer();
-  dt.items.add(file);
-
-  const target =
-    document.querySelector(".chat-input") ||
-    document.querySelector(".bubbles") ||
-    document.querySelector(".chat") ||
-    findMessageInput() ||
-    document.body;
-
-  LOG("drop target:", target.className || target.tagName);
-
-  for (const type of ["dragenter", "dragover", "drop"]) {
-    const ev = new DragEvent(type, { bubbles: true, cancelable: true, composed: true });
-    Object.defineProperty(ev, "dataTransfer", { value: dt });
-    target.dispatchEvent(ev);
-  }
-}
-
-function findMessageInput() {
-  return (
-    document.querySelector(".input-message-input[contenteditable='true']") ||
-    document.querySelector(".input-message-input") ||
-    document.querySelector('[contenteditable="true"]')
-  );
-}
-
-// Cari <input type=file> yang menerima gambar (input media Telegram).
-function findMediaFileInput() {
-  const inputs = [...document.querySelectorAll('input[type="file"]')];
-  return inputs.find((i) => /image|video/i.test(i.accept || "")) || null;
-}
-
-function dataUrlToBlob(dataUrl) {
-  const [head, b64] = dataUrl.split(",");
-  const mime = head.match(/:(.*?);/)[1];
-  const bin = atob(b64);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return new Blob([arr], { type: mime });
+  LOG("teruskan foto ke main world untuk paste");
+  window.postMessage({ __tgCam: "send-image", dataUrl, name: `photo_${stamp()}.jpg` }, "*");
 }
 
 function stamp() {
