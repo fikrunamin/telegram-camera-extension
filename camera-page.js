@@ -1,19 +1,16 @@
 // Halaman kamera milik extension (chrome-extension://). Bebas dari batasan
-// halaman Telegram. Ambil foto -> preview -> kirim dataURL ke window pembuka
-// (tab Telegram) lalu tutup.
+// halaman Telegram. Ambil foto -> langsung kirim dataURL ke tab Telegram
+// (lewat chrome.storage) lalu tutup. Preview ditangani oleh dialog native
+// Telegram.
 
 const video = document.getElementById("video");
-const preview = document.getElementById("preview");
 const status = document.getElementById("status");
 
 const shutterBtn = document.getElementById("shutter");
 const cancelBtn = document.getElementById("cancel");
-const retakeBtn = document.getElementById("retake");
-const useBtn = document.getElementById("use");
 const mirrorBtn = document.getElementById("mirror");
 
 let stream = null;
-let capturedDataUrl = null;
 let mirrored = false;
 
 function applyMirror() {
@@ -65,27 +62,7 @@ function stopCamera() {
   }
 }
 
-function showCameraMode() {
-  preview.hidden = true;
-  video.hidden = false;
-  shutterBtn.hidden = false;
-  cancelBtn.hidden = false;
-  mirrorBtn.hidden = false;
-  retakeBtn.hidden = true;
-  useBtn.hidden = true;
-}
-
-function showPreviewMode(dataUrl) {
-  preview.src = dataUrl;
-  preview.hidden = false;
-  video.hidden = true;
-  shutterBtn.hidden = true;
-  cancelBtn.hidden = true;
-  mirrorBtn.hidden = true;
-  retakeBtn.hidden = false;
-  useBtn.hidden = false;
-}
-
+// Ambil foto -> langsung kirim ke Telegram -> tutup popup.
 shutterBtn.addEventListener("click", () => {
   if (!video.videoWidth) {
     setStatus("Kamera belum siap…");
@@ -101,9 +78,13 @@ shutterBtn.addEventListener("click", () => {
     ctx.scale(-1, 1);
   }
   ctx.drawImage(video, 0, 0);
-  capturedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+
+  shutterBtn.disabled = true;
   stopCamera();
-  showPreviewMode(capturedDataUrl);
+  chrome.storage.local.set({ tgCameraPhoto: { dataUrl, ts: Date.now() } }, () => {
+    window.close();
+  });
 });
 
 cancelBtn.addEventListener("click", () => {
@@ -111,25 +92,6 @@ cancelBtn.addEventListener("click", () => {
   window.close();
 });
 
-retakeBtn.addEventListener("click", () => {
-  capturedDataUrl = null;
-  showCameraMode();
-  startCamera();
-});
-
-useBtn.addEventListener("click", () => {
-  if (!capturedDataUrl) return;
-  // Kirim lewat chrome.storage (andal lintas-konteks; tidak bergantung opener).
-  chrome.storage.local.set(
-    { tgCameraPhoto: { dataUrl: capturedDataUrl, ts: Date.now() } },
-    () => {
-      stopCamera();
-      window.close();
-    },
-  );
-});
-
 window.addEventListener("beforeunload", stopCamera);
 
-showCameraMode();
 startCamera();

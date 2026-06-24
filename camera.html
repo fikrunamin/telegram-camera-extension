@@ -9,19 +9,13 @@
 <body>
   <div id="stage">
     <video id="video" autoplay playsinline muted></video>
-    <img id="preview" alt="" hidden>
     <div id="status">Memuat kamera…</div>
   </div>
 
   <div id="controls">
-    <!-- Mode kamera -->
     <button id="cancel" class="btn btn-secondary" type="button">Batal</button>
     <button id="shutter" type="button" aria-label="Ambil foto"></button>
     <button id="mirror" class="btn-mirror" type="button" title="Cermin (mirror)" aria-label="Mirror">⇋</button>
-
-    <!-- Mode preview (disembunyikan dulu) -->
-    <button id="retake" class="btn btn-secondary" type="button" hidden>Ulangi</button>
-    <button id="use" class="btn btn-primary" type="button" hidden>Gunakan</button>
   </div>
 
   <script src="camera-page.js"></script>

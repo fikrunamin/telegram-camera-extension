@@ -5,9 +5,9 @@ Chrome extension untuk **Telegram Web (`/k/`)** yang menambahkan tombol **Camera
 ## Fitur
 
 - 📎 Item **Camera** menyatu di menu attachment Telegram (tahan bahasa apa pun — deteksi via ikon, bukan teks).
-- 📷 Popup kamera dengan tombol **shutter**, **preview**, dan opsi **Ulangi / Gunakan**.
+- 📷 Popup kamera dengan tombol **shutter** — sekali tekan langsung kirim (tanpa langkah preview di popup).
 - 🪞 Toggle **mirror** (cermin) — preferensi tersimpan antar sesi.
-- 🚀 Foto dikirim lewat **paste di main world** sehingga muncul dialog kirim native Telegram.
+- 🚀 Foto dikirim lewat **paste di main world** sehingga muncul **dialog kirim native Telegram** (tempat preview & caption).
 
 ## Instalasi (mode developer)
 
@@ -23,10 +23,9 @@ Chrome extension untuk **Telegram Web (`/k/`)** yang menambahkan tombol **Camera
 
 1. Buka sebuah chat.
 2. Klik ikon **paperclip** → pilih **Camera**.
-3. Di popup kamera, tekan tombol bundar untuk mengambil foto.
-4. (Opsional) aktifkan **mirror** (`⇋`) sebelum mengambil foto.
-5. Tinjau hasilnya → **Ulangi** untuk foto ulang, atau **Gunakan**.
-6. Dialog kirim foto native Telegram muncul → tambahkan caption → kirim.
+3. (Opsional) aktifkan **mirror** (`⇋`) sebelum mengambil foto.
+4. Tekan tombol bundar (shutter) — foto langsung dikirim ke Telegram.
+5. Dialog kirim foto native Telegram muncul (preview + caption) → kirim.
 
 ## Cara kerja
 
@@ -34,7 +33,7 @@ Chrome extension untuk **Telegram Web (`/k/`)** yang menambahkan tombol **Camera
 [Menu attachment Telegram]
         │  klik "Camera"  (content.js — isolated world)
         ▼
-[Popup camera.html]  ── getUserMedia → preview → "Gunakan"
+[Popup camera.html]  ── getUserMedia → shutter
         │  simpan foto (dataURL) ke chrome.storage.local
         ▼
 [content.js]  ── chrome.storage.onChanged → window.postMessage
@@ -53,7 +52,7 @@ Detail penting: Telegram membaca `clipboardData` di **konteks JS halaman (main w
 |------|---------|-------|
 | `manifest.json` | — | Konfigurasi extension (MV3). |
 | `content.js` | isolated world | Sisipkan item Camera, buka popup, teruskan foto ke main world. |
-| `camera.html` / `camera-page.js` / `camera-page.css` | extension page | UI kamera (popup): capture, preview, mirror. |
+| `camera.html` / `camera-page.js` / `camera-page.css` | extension page | UI kamera (popup): capture & mirror. |
 | `injected.js` | **main world** | Dispatch event paste agar dialog kirim Telegram muncul. |
 | `styles.css` | isolated world | Styling item menu Camera. |
 | `icons/` | — | Ikon extension & item menu. |
