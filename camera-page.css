@@ -67,7 +67,20 @@ body {
 }
 #shutter:active { transform: scale(.92); }
 
-.spacer { width: 72px; flex: 0 0 auto; }
+/* Tombol toggle mirror (lebar sama dengan .spacer agar shutter tetap di tengah) */
+.btn-mirror {
+  width: 72px;
+  flex: 0 0 auto;
+  height: 44px;
+  border: none;
+  border-radius: 22px;
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.btn-mirror.active { background: #3390ec; }
 
 .btn {
   border: none;

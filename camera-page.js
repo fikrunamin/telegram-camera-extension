@@ -12,9 +12,28 @@ const shutterBtn = document.getElementById("shutter");
 const cancelBtn = document.getElementById("cancel");
 const retakeBtn = document.getElementById("retake");
 const useBtn = document.getElementById("use");
+const mirrorBtn = document.getElementById("mirror");
 
 let stream = null;
 let capturedDataUrl = null;
+let mirrored = false;
+
+function applyMirror() {
+  video.style.transform = mirrored ? "scaleX(-1)" : "none";
+  mirrorBtn.classList.toggle("active", mirrored);
+}
+
+// Ingat preferensi mirror antar sesi.
+chrome.storage.local.get("tgCameraMirror", (r) => {
+  mirrored = !!(r && r.tgCameraMirror);
+  applyMirror();
+});
+
+mirrorBtn.addEventListener("click", () => {
+  mirrored = !mirrored;
+  applyMirror();
+  chrome.storage.local.set({ tgCameraMirror: mirrored });
+});
 
 function setStatus(msg) {
   if (!msg) {
@@ -57,6 +76,7 @@ function showCameraMode() {
   video.hidden = false;
   shutterBtn.hidden = false;
   cancelBtn.hidden = false;
+  mirrorBtn.hidden = false;
   retakeBtn.hidden = true;
   useBtn.hidden = true;
 }
@@ -67,6 +87,7 @@ function showPreviewMode(dataUrl) {
   video.hidden = true;
   shutterBtn.hidden = true;
   cancelBtn.hidden = true;
+  mirrorBtn.hidden = true;
   retakeBtn.hidden = false;
   useBtn.hidden = false;
 }
@@ -79,7 +100,13 @@ shutterBtn.addEventListener("click", () => {
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
+  const ctx = canvas.getContext("2d");
+  if (mirrored) {
+    // Balik horizontal agar hasil foto sesuai dengan yang terlihat di layar.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(video, 0, 0);
   capturedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
   stopCamera();
   showPreviewMode(capturedDataUrl);

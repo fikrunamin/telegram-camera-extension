@@ -96,13 +96,27 @@ chrome.storage.onChanged.addListener((changes, area) => {
   pasteDataUrlToTelegram(dataUrl);
 });
 
+const LOG = (...a) => console.log("%c[TG-CAM]", "color:#3390ec;font-weight:bold", ...a);
+
 function pasteDataUrlToTelegram(dataUrl) {
   const blob = dataUrlToBlob(dataUrl);
   const file = new File([blob], `photo_${stamp()}.jpg`, { type: "image/jpeg" });
 
-  const dt = new DataTransfer();
-  dt.items.add(file);
+  window.focus();
 
+  // Metode 1 (paling andal): suntik ke <input type=file> media milik Telegram.
+  const fileInput = findMediaFileInput();
+  if (fileInput) {
+    LOG("inject ke file input | accept:", fileInput.accept || "(kosong)");
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    fileInput.dispatchEvent(new Event("input", { bubbles: true }));
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    return;
+  }
+
+  // Metode 2 (fallback): event paste sintetis ke kolom pesan.
   const input =
     document.querySelector(".input-message-input[contenteditable='true']") ||
     document.querySelector(".input-message-input") ||
@@ -113,12 +127,24 @@ function pasteDataUrlToTelegram(dataUrl) {
     return;
   }
 
-  window.focus();
+  LOG("tidak ada file input cocok -> pakai paste sintetis");
   input.focus();
 
+  const dt = new DataTransfer();
+  dt.items.add(file);
   const pasteEvent = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
   Object.defineProperty(pasteEvent, "clipboardData", { value: dt });
   input.dispatchEvent(pasteEvent);
+}
+
+// Cari <input type=file> yang menerima gambar (input media Telegram), bukan
+// input dokumen. Hanya kembalikan yang jelas untuk media.
+function findMediaFileInput() {
+  const inputs = [...document.querySelectorAll('input[type="file"]')];
+  return (
+    inputs.find((i) => /image|video/i.test(i.accept || "")) ||
+    null
+  );
 }
 
 function dataUrlToBlob(dataUrl) {
