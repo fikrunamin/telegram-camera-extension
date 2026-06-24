@@ -41,7 +41,7 @@
       /* sebagian browser sudah mengisi clipboardData dari constructor */
     }
     input.dispatchEvent(ev);
-    LOG("paste dikirim |", file.type, file.size, "bytes | clipboardData.items:", ev.clipboardData && ev.clipboardData.items.length);
+    LOG("foto dikirim ke Telegram via paste |", file.type, file.size, "bytes");
     return true;
   }
 
