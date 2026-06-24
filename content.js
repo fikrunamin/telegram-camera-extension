@@ -104,7 +104,7 @@ function pasteDataUrlToTelegram(dataUrl) {
 
   window.focus();
 
-  // Metode 1 (paling andal): suntik ke <input type=file> media milik Telegram.
+  // Metode 1: jika kebetulan ada <input type=file> media -> suntik langsung.
   const fileInput = findMediaFileInput();
   if (fileInput) {
     LOG("inject ke file input | accept:", fileInput.accept || "(kosong)");
@@ -116,35 +116,54 @@ function pasteDataUrlToTelegram(dataUrl) {
     return;
   }
 
-  // Metode 2 (fallback): event paste sintetis ke kolom pesan.
-  const input =
-    document.querySelector(".input-message-input[contenteditable='true']") ||
-    document.querySelector(".input-message-input") ||
-    document.querySelector('[contenteditable="true"]');
+  // Metode 2 (utama): simulasi drag-and-drop ke area chat.
+  LOG("simulasi drop ke area chat");
+  simulateDrop(file);
 
-  if (!input) {
-    alert("Tidak menemukan kolom pesan Telegram. Buka sebuah chat dulu.");
-    return;
+  // Metode 3 (cadangan terakhir): paste sintetis ke kolom pesan.
+  const input = findMessageInput();
+  if (input) {
+    input.focus();
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    const pasteEvent = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(pasteEvent, "clipboardData", { value: dt });
+    input.dispatchEvent(pasteEvent);
   }
-
-  LOG("tidak ada file input cocok -> pakai paste sintetis");
-  input.focus();
-
-  const dt = new DataTransfer();
-  dt.items.add(file);
-  const pasteEvent = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
-  Object.defineProperty(pasteEvent, "clipboardData", { value: dt });
-  input.dispatchEvent(pasteEvent);
 }
 
-// Cari <input type=file> yang menerima gambar (input media Telegram), bukan
-// input dokumen. Hanya kembalikan yang jelas untuk media.
+function simulateDrop(file) {
+  const dt = new DataTransfer();
+  dt.items.add(file);
+
+  const target =
+    document.querySelector(".chat-input") ||
+    document.querySelector(".bubbles") ||
+    document.querySelector(".chat") ||
+    findMessageInput() ||
+    document.body;
+
+  LOG("drop target:", target.className || target.tagName);
+
+  for (const type of ["dragenter", "dragover", "drop"]) {
+    const ev = new DragEvent(type, { bubbles: true, cancelable: true, composed: true });
+    Object.defineProperty(ev, "dataTransfer", { value: dt });
+    target.dispatchEvent(ev);
+  }
+}
+
+function findMessageInput() {
+  return (
+    document.querySelector(".input-message-input[contenteditable='true']") ||
+    document.querySelector(".input-message-input") ||
+    document.querySelector('[contenteditable="true"]')
+  );
+}
+
+// Cari <input type=file> yang menerima gambar (input media Telegram).
 function findMediaFileInput() {
   const inputs = [...document.querySelectorAll('input[type="file"]')];
-  return (
-    inputs.find((i) => /image|video/i.test(i.accept || "")) ||
-    null
-  );
+  return inputs.find((i) => /image|video/i.test(i.accept || "")) || null;
 }
 
 function dataUrlToBlob(dataUrl) {
