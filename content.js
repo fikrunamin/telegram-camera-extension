@@ -88,8 +88,6 @@ function openCameraPopup() {
 
 /* ---------- 3. Terima foto dari popup, teruskan ke main world ---------- */
 
-const LOG = (...a) => console.log("%c[TG-CAM]", "color:#3390ec;font-weight:bold", ...a);
-
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local" || !changes.tgCameraPhoto || !changes.tgCameraPhoto.newValue) return;
 
@@ -103,7 +101,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
 // akan men-dispatch event paste-nya di konteks yang sama dengan Telegram.
 function sendPhotoToTelegram(dataUrl) {
   window.focus();
-  LOG("teruskan foto ke main world untuk paste");
   window.postMessage({ __tgCam: "send-image", dataUrl, name: `photo_${stamp()}.jpg` }, "*");
 }
 

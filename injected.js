@@ -4,8 +4,6 @@
 // oleh Telegram. Foto dikirim dari content script via window.postMessage.
 
 (() => {
-  const LOG = (...a) => console.log("%c[TG-CAM-INJ]", "color:#e67e22;font-weight:bold", ...a);
-
   function dataUrlToFile(dataUrl, name) {
     const [head, b64] = dataUrl.split(",");
     const mime = head.match(/:(.*?);/)[1];
@@ -25,10 +23,7 @@
 
   function dispatchPaste(file) {
     const input = findMessageInput();
-    if (!input) {
-      LOG("kolom pesan tidak ditemukan — buka chat dulu");
-      return false;
-    }
+    if (!input) return false;
     input.focus();
 
     const dt = new DataTransfer();
@@ -41,7 +36,6 @@
       /* sebagian browser sudah mengisi clipboardData dari constructor */
     }
     input.dispatchEvent(ev);
-    LOG("foto dikirim ke Telegram via paste |", file.type, file.size, "bytes");
     return true;
   }
 
@@ -61,7 +55,6 @@
       Object.defineProperty(ev, "dataTransfer", { value: dt });
       target.dispatchEvent(ev);
     }
-    LOG("drop dikirim ke", target.className || target.tagName);
   }
 
   window.addEventListener("message", (e) => {
@@ -77,6 +70,4 @@
       dispatchDrop(file);
     }
   });
-
-  LOG("aktif di main world");
 })();

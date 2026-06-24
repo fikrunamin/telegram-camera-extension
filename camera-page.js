@@ -2,8 +2,6 @@
 // halaman Telegram. Ambil foto -> preview -> kirim dataURL ke window pembuka
 // (tab Telegram) lalu tutup.
 
-const LOG = (...a) => console.log("%c[TG-CAM-PAGE]", "color:#3390ec;font-weight:bold", ...a);
-
 const video = document.getElementById("video");
 const preview = document.getElementById("preview");
 const status = document.getElementById("status");
@@ -49,13 +47,9 @@ async function startCamera() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
   } catch (err) {
-    LOG("getUserMedia gagal:", err.name, err.message);
     setStatus("Tidak bisa mengakses kamera: " + err.name + " — " + err.message);
     return;
   }
-
-  const track = stream.getVideoTracks()[0];
-  LOG("kamera:", track && track.label, "| readyState:", track && track.readyState);
 
   video.srcObject = stream;
   video.onloadedmetadata = () => {
